@@ -1,0 +1,24 @@
+{
+  "name": "programming-tasks",
+  "version": "1.0.0",
+  "description": "Programming Tasks",
+  "main": "crawl-issue-reports.js",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "puppeteer": "^22.6.5"
+  },
+  "scripts": {
+    "crawler": "node crawl-issue-reports.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mourats/programming-tasks.git"
+  },
+  "keywords": [],
+  "author": "mourats",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mourats/programming-tasks/issues"
+  },
+  "homepage": "https://github.com/mourats/programming-tasks#readme"
+}
