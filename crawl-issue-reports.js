@@ -47,16 +47,18 @@ const getDataLink = async (url) => {
       const userElement = await commentBlock.$('.action-details .user-hover');
       const user = await userElement.evaluate(node => node.innerText.trim());
 
-      // Extract the datetime of the comment.
+      // Extract the date epoch and date text of the comment.
       const datetimeElement = await commentBlock.$('.action-details time');
       const datetime = await datetimeElement.evaluate(node => node.getAttribute('datetime'));
+      const epoch = new Date(datetime).getTime() / 1000;
+      const dateText = await datetimeElement.evaluate(node => node.innerText.trim());
 
       // Extract the comment text.
       const commentBodyElement = await commentBlock.$('.action-body');
       const commentText = await commentBodyElement.evaluate(node => node.innerText.trim());
 
       // Concat each part with two dots, as asked.
-      const concatenatedComment = `${user}:${datetime}:${commentText}`;
+      const concatenatedComment = `${user}:${epoch}:${dateText}:"${commentText}"`;
       comments += `${concatenatedComment}. `; // Divide the comments with dot and space.
     }
     comments = comments.replace(/(\r\n|\n|\r|\,)/gm, ' ');
