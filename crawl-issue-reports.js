@@ -16,7 +16,7 @@ const getDataLink = async (url) => {
 
   try {
     // Open the link provided and wait until all network connections are finished. Resolve the sync problem for complete page loading.
-    await page.goto(url, { waitUntil: 'networkidle0' });
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
     const content = await page.content();
 
     // Extracting type data from the page content, if it exists.
@@ -40,11 +40,24 @@ const getDataLink = async (url) => {
     description = description.replace(/(\r\n|\n|\r|\,)/gm, ' ');
 
     // Extracting comments data from the page content, if it exists.
-    const commentElements = await page.$$('.issue-data-block.activity-comment.twixi-block.expanded .action-body.flooded');
+    const commentBlocks = await page.$$('.issue-data-block.activity-comment.twixi-block.expanded');
     let comments = '';
-    for (const commentElement of commentElements) {
-      const commentText = await commentElement.evaluate(node => node.innerText.trim());
-      comments += `${commentText}. `; //Separate comments with a dot.
+    for (const commentBlock of commentBlocks) {
+      // Extract the comment user.
+      const userElement = await commentBlock.$('.action-details .user-hover');
+      const user = await userElement.evaluate(node => node.innerText.trim());
+
+      // Extract the datetime of the comment.
+      const datetimeElement = await commentBlock.$('.action-details time');
+      const datetime = await datetimeElement.evaluate(node => node.getAttribute('datetime'));
+
+      // Extract the comment text.
+      const commentBodyElement = await commentBlock.$('.action-body');
+      const commentText = await commentBodyElement.evaluate(node => node.innerText.trim());
+
+      // Concat each part with two dots, as asked.
+      const concatenatedComment = `${user}:${datetime}:${commentText}`;
+      comments += `${concatenatedComment}. `; // Divide the comments with dot and space.
     }
     comments = comments.replace(/(\r\n|\n|\r|\,)/gm, ' ');
 
@@ -63,11 +76,23 @@ const getDataLink = async (url) => {
 const csvContent = `Type,Assignee,Created,Created Epoch,Description,Comments\n`;
 fs.writeFileSync('camel_issues.csv', csvContent);
 
+// Creating sleep function.
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 // For each link found, get the data.
 const fetchData = async () => {
+  let mount = 0;
   for (const link of links) {
     console.log("Getting data from: " + link);
     await getDataLink(link);
+
+    // After every 500 requests, wait five minutes. 
+    // Mechanism to avoid being blocked by Jira server due to too many requests.
+    if (mount === 500) {
+      await sleep(300000);
+      mount = 0;
+    }
+    mount++;
   }
 };
 
